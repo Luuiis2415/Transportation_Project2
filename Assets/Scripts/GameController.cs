@@ -16,6 +16,7 @@ public class GameController : MonoBehaviour
     int airplaneCargo, airplaneCargoMax;
     int cargoBuildUp;
     int score;
+    int moveY, moveX;
 
 
     // Start is called before the first frame update
@@ -53,6 +54,9 @@ public class GameController : MonoBehaviour
         depotX = gridX - 1;
         depotY = 0;
         grid[depotX, depotY].GetComponent<Renderer>().material.color = Color.black;
+
+        moveX = 0;
+        moveY = 0;
     }
 
     public void ProcessClick(GameObject clickedCube, int x, int y)
@@ -70,21 +74,6 @@ public class GameController : MonoBehaviour
             {
                 airplaneActive = true;
                 clickedCube.GetComponent<Renderer>().material.color = Color.blue;
-            }
-        }
-
-        //if the sky is clicked (whitecube) instead of the airplane
-        else
-        {
-            if (airplaneActive)
-            {
-                grid[airplaneX, airplaneY].GetComponent<Renderer>().material.color = Color.white;
-                grid[depotX, depotY].GetComponent<Renderer>().material.color = Color.black;
-
-                airplaneX = x;
-                airplaneY = y;
-                grid[x, y].GetComponent<Renderer>().material.color = Color.red;
-                grid[x, y].GetComponent<Renderer>().material.color = Color.blue;
             }
         }
     }
@@ -112,12 +101,88 @@ public class GameController : MonoBehaviour
         }
     }
 
+    void DetectKeyboardInput()
+    {
+        // every 30th of a second im setting these variables, to whats appropriate
+        // the down arrow has taken priority over the up arrow and
+        // the right has taken priority over the left b/c i used else if
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            moveY = -1;
+            moveX = 0;
+
+        }
+        else if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            moveY = 1;
+            moveX = 0;
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            moveY = 0;
+            moveX = 1;
+        }
+        else if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            moveY = 0;
+            moveX = -1;
+        }
+
+    }
+
+    void MoveAirplane()
+    {
+        // we have to check if the airplane is active in order to move it
+        if (airplaneActive)
+        {
+            grid[airplaneX, airplaneY].GetComponent<Renderer>().material.color = Color.white;
+            grid[depotX, depotY].GetComponent<Renderer>().material.color = Color.black;
+
+            //right here we put the airplane in its new spot
+            airplaneX += moveX;
+            airplaneY += moveY;
+
+            //it continues to move so gotta make sure it doesn't leave screen
+            // using this method because its checking the actual movement of the plane
+            if (airplaneX >= gridX)
+            {
+                airplaneX = gridX - 1;
+            }
+            else if(airplaneX < 0)
+            {
+                airplaneX = 0;
+            }
+
+            if(airplaneY >= gridY)
+            {
+                airplaneY = gridY - 1;
+            }
+            else if (airplaneY < 0)
+            {
+                airplaneY = 0;
+            }
+
+
+            grid[airplaneX, airplaneY].GetComponent<Renderer>().material.color = Color.red;
+            grid[airplaneX, airplaneY].GetComponent<Renderer>().material.color = Color.blue;
+        }
+
+        //gotta reset
+        moveX = 0;
+        moveY = 0;
+
+    }
+
     // Update is called once per frame
     void Update()
     {
+        DetectKeyboardInput();
         
         if(Time.time > turnTimer)
         {
+            MoveAirplane();
+
+
             LoadCargo();
             DeliverCargo();
             print("Cargo: " + airplaneCargo + " Score: " + score);
